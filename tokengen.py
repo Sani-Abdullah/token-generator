@@ -1,3 +1,4 @@
+from functools import reduce
 import random
 import numpy as np
 
@@ -7,9 +8,8 @@ from datetime import datetime
 rate = 3/200
 amount_cash = 2000
 utility_amount = rate * amount_cash
+complimented_amount = int(utility_amount * 10)
 
-token_class = 0 #[0-3]
-token_subclass = 0 #[0-15]
 
 
 def bin_str(int):
@@ -27,14 +27,17 @@ def pad(binary, length: int):
     return binary
 
 
+token_class = pad(bin_str(0), 2) #[0-3]
+token_subclass = pad(bin_str(0), 4) #[0-15]
+
 def crc16(data: str):
     '''
     CRC-16-ModBus Algorithm
     '''
     inted_data = int(data, base=2)
     hexed_data = hex(inted_data).lstrip('0x')
-
-    data = bytearray.fromhex(hexed_data)
+    padded_hexed_data = pad(hexed_data, 14)
+    data = bytearray.fromhex(padded_hexed_data)
     poly = 0x8404
     crc = 0x0000
     for b in data:
@@ -47,7 +50,9 @@ def crc16(data: str):
     
     # reverse byte order if you need to
     # crc = (crc << 8) | ((crc >> 8) & 0xFF)
-    return int(np.uint16(crc))
+    
+    crc = int(np.uint16(crc))
+    return pad(bin_str(crc), 16)
 
 
 def get_exponent(amount: int):
@@ -63,31 +68,40 @@ def get_exponent(amount: int):
 
 def get_mantissa(exponent: int, amount: int):
     if exponent == 0:
-        return amount
+        return pad(bin_str(amount), 14)
     else:
         rhs_sum = 0
         for i in range(1, exponent + 1):
             rhs_sum += int(2**14 * 10^(i-1))
 
-    return (amount - rhs_sum) / int(10 ** exponent)
+    mantissa = (amount - rhs_sum) / int(10 ** exponent)
+    return pad(bin_str(mantissa), 14)
 
 def get_random(): # TBD 4 DP
-    return random.randint(0, 15)
+    rnd = random.randint(0, 15)
+    return pad(bin_str(rnd), 4)
 
 def get_token_id():
     base_date = datetime(2022, 4, 17)
     now = datetime.now()
     delta = now - base_date
     minutes_from_base_date = int(delta.total_seconds() / 60)
-    return minutes_from_base_date
+    return pad(bin_str(minutes_from_base_date), 24)
 
+exponent = get_exponent(complimented_amount)
+dressed_exponent = pad(bin_str(exponent), 2)
 def get_amount_block():
-    complimented_amount = int(utility_amount * 10)
-    exponent = get_exponent(complimented_amount)
     mantissa = get_mantissa(exponent, complimented_amount)
     amount_block = concat(pad(bin_str(exponent), 2), pad(bin_str(mantissa), 14))
     return amount_block
 
 
 def generate_token_message():
-    pass
+    token_order = [token_class, token_subclass, get_random(), get_token_id(), dressed_exponent, get_mantissa(exponent, complimented_amount)]
+    crc = crc16(reduce(concat, token_order))
+    token_order.append(crc)
+    token64_order = token_order[1:]
+    print(token64_order)
+
+generate_token_message()
+
