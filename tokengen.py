@@ -1,4 +1,3 @@
-from email.mime import base
 import random
 import numpy as np
 
@@ -12,9 +11,11 @@ utility_amount = rate * amount_cash
 token_class = 0 #[0-3]
 token_subclass = 0 #[0-15]
 
+
+def bin_str(int):
+    return bin(int).lstrip('0b')
+
 def concat(bin1, bin2):
-    bin1 = bin1.lstrip('0b')
-    bin2 = bin2.lstrip('0b')
     return ''.join([bin1, bin2])
 
 def pad(binary, length: int):
@@ -23,17 +24,17 @@ def pad(binary, length: int):
     while binary_length < length:
         binary = '0' + binary 
         binary_length += 1
-    print(binary)
     return binary
 
-pad(11, 4)
 
-
-def crc16(data: bytes):
+def crc16(data: str):
     '''
     CRC-16-ModBus Algorithm
     '''
-    data = bytearray(data)
+    inted_data = int(data, base=2)
+    hexed_data = hex(inted_data).lstrip('0x')
+
+    data = bytearray.fromhex(hexed_data)
     poly = 0x8404
     crc = 0x0000
     for b in data:
@@ -46,8 +47,8 @@ def crc16(data: bytes):
     
     # reverse byte order if you need to
     # crc = (crc << 8) | ((crc >> 8) & 0xFF)
+    return int(np.uint16(crc))
 
-    return np.uint16(crc)
 
 def get_exponent(amount: int):
     exponent = 3
@@ -80,11 +81,13 @@ def get_token_id():
     minutes_from_base_date = int(delta.total_seconds() / 60)
     return minutes_from_base_date
 
-def get_amount():
+def get_amount_block():
     complimented_amount = int(utility_amount * 10)
-    exponent = pad(get_exponent(complimented_amount), 2)
+    exponent = get_exponent(complimented_amount)
     mantissa = get_mantissa(exponent, complimented_amount)
-    amount_block = concat(bin(exponent), bin(mantissa))
-    print(amount_block)
+    amount_block = concat(pad(bin_str(exponent), 2), pad(bin_str(mantissa), 14))
+    return amount_block
 
-get_amount()
+
+def generate_token_message():
+    pass
