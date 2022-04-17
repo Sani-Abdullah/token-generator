@@ -1,7 +1,6 @@
 from functools import reduce
-import string
 from keygen import generate_decoder_key
-from tokengen import bin_pad, bin_str, concat_str, generate_token_block
+from tokengen import bin_pad, bin_str, concat_str, generate_token_block, token_class
 
 
 def start_point(decoder_key, token_block):
@@ -18,6 +17,16 @@ def nibbleate(bits64_string):
     for i in range(0, len(bits64_string), 4):
         nibbles.append(bits64_string[i: i + 4])
     return nibbles
+
+def token_nibbleate(bits64_string):
+    decimal_token = int(bits64_string, base=2)
+    decimal_token_str = str(decimal_token)
+    padded_decimal_token = bin_pad(decimal_token_str, 20)
+    nibbleated_decimal_token = nibbleate(padded_decimal_token)
+
+    concatenated_decimal_nibbles = reduce(lambda x, y: concat_str(x, y, '-'), nibbleated_decimal_token)
+    return concatenated_decimal_nibbles
+
 
 
 def substitute(bits64_string):
@@ -49,8 +58,29 @@ def permutate(bits64_string):
     for i in list(range(64)):
         final_permutation[table[i]] = initial_permutation[i]
 
-    joined_permutated_bits = ''.join(final_permutation)
-    
-    return joined_permutated_bits
+    concatenated_permutated_bits = reduce(concat_str, final_permutation)
+    return concatenated_permutated_bits
 
-permutate(start_point)
+def rotate(bits64_string):
+    key = [i for i in bits64_string]
+    msb = key.pop(0)
+    key.append(msb)
+
+    concatenated_key = reduce(concat_str, key)
+    return concatenated_key
+
+def class_insert(bits64_string):
+    exploded_token_class = [i for i in token_class]
+    key = [i for i in bits64_string]
+    bit28 = key[-29]
+    bit27 = key[-28]
+    key[-29] = exploded_token_class[0]
+    key[-28] = exploded_token_class[1]
+    key[0] = bit28
+    key[1] = bit27
+
+    concatenated_key = reduce(concat_str, key)
+    return concatenated_key
+
+
+# def generate_encrypted_token():

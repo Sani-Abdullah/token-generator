@@ -15,8 +15,8 @@ complimented_amount = int(utility_amount * 10)
 def bin_str(int):
     return bin(int).lstrip('0b')
 
-def concat_str(bin1, bin2):
-    return ''.join([bin1, bin2])
+def concat_str(bin1, bin2, sep=''):
+    return sep.join([bin1, bin2])
 
 def bin_pad(binary, length: int):
     binary = str(binary)
