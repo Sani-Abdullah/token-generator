@@ -38,8 +38,12 @@ def crc16(data: str):
     hexed_data = hex(inted_data).lstrip('0x')
     padded_hexed_data = pad(hexed_data, 14)
     data = bytearray.fromhex(padded_hexed_data)
-    poly = 0x8404
-    crc = 0x0000
+    # poly = 0x8404
+    # poly = 0x18005
+    poly = 0xA001
+
+    # crc = 0x0000
+    crc = 0xFFFF
     for b in data:
         crc ^= (0xFF & b)
         for _ in range(0, 8):
@@ -101,7 +105,4 @@ def generate_token_message():
     crc = crc16(reduce(concat, token_order))
     token_order.append(crc)
     token64_order = token_order[1:]
-    print(token64_order)
-
-generate_token_message()
-
+    return reduce(concat, token64_order)
