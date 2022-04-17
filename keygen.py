@@ -53,7 +53,7 @@ def generate_decoder_key():
     x_3 = x_2 ^ inted_vending_key
 
     # 5
-    decoder_key = hex(x_3)
+    decoder_key = bin(x_3).lstrip('0b')
 
     ##################
     # DKGA02 END

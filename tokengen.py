@@ -15,10 +15,10 @@ complimented_amount = int(utility_amount * 10)
 def bin_str(int):
     return bin(int).lstrip('0b')
 
-def concat(bin1, bin2):
+def concat_str(bin1, bin2):
     return ''.join([bin1, bin2])
 
-def pad(binary, length: int):
+def bin_pad(binary, length: int):
     binary = str(binary)
     binary_length = len(binary)
     while binary_length < length:
@@ -27,8 +27,8 @@ def pad(binary, length: int):
     return binary
 
 
-token_class = pad(bin_str(0), 2) #[0-3]
-token_subclass = pad(bin_str(0), 4) #[0-15]
+token_class = bin_pad(bin_str(0), 2) #[0-3]
+token_subclass = bin_pad(bin_str(0), 4) #[0-15]
 
 def crc16(data: str):
     '''
@@ -36,8 +36,8 @@ def crc16(data: str):
     '''
     inted_data = int(data, base=2)
     hexed_data = hex(inted_data).lstrip('0x')
-    padded_hexed_data = pad(hexed_data, 14)
-    data = bytearray.fromhex(padded_hexed_data)
+    bin_padded_hexed_data = bin_pad(hexed_data, 14)
+    data = bytearray.fromhex(bin_padded_hexed_data)
     # poly = 0x8404
     # poly = 0x18005
     poly = 0xA001
@@ -56,7 +56,7 @@ def crc16(data: str):
     # crc = (crc << 8) | ((crc >> 8) & 0xFF)
     
     crc = int(np.uint16(crc))
-    return pad(bin_str(crc), 16)
+    return bin_pad(bin_str(crc), 16)
 
 
 def get_exponent(amount: int):
@@ -72,37 +72,37 @@ def get_exponent(amount: int):
 
 def get_mantissa(exponent: int, amount: int):
     if exponent == 0:
-        return pad(bin_str(amount), 14)
+        return bin_pad(bin_str(amount), 14)
     else:
         rhs_sum = 0
         for i in range(1, exponent + 1):
             rhs_sum += int(2**14 * 10^(i-1))
 
     mantissa = (amount - rhs_sum) / int(10 ** exponent)
-    return pad(bin_str(mantissa), 14)
+    return bin_pad(bin_str(mantissa), 14)
 
 def get_random(): # TBD 4 DP
     rnd = random.randint(0, 15)
-    return pad(bin_str(rnd), 4)
+    return bin_pad(bin_str(rnd), 4)
 
 def get_token_id():
     base_date = datetime(2022, 4, 17)
     now = datetime.now()
     delta = now - base_date
     minutes_from_base_date = int(delta.total_seconds() / 60)
-    return pad(bin_str(minutes_from_base_date), 24)
+    return bin_pad(bin_str(minutes_from_base_date), 24)
 
 exponent = get_exponent(complimented_amount)
-dressed_exponent = pad(bin_str(exponent), 2)
+dressed_exponent = bin_pad(bin_str(exponent), 2)
 def get_amount_block():
     mantissa = get_mantissa(exponent, complimented_amount)
-    amount_block = concat(pad(bin_str(exponent), 2), pad(bin_str(mantissa), 14))
+    amount_block = concat_str(bin_pad(bin_str(exponent), 2), bin_pad(bin_str(mantissa), 14))
     return amount_block
 
 
-def generate_token_message():
+def generate_token_block():
     token_order = [token_class, token_subclass, get_random(), get_token_id(), dressed_exponent, get_mantissa(exponent, complimented_amount)]
-    crc = crc16(reduce(concat, token_order))
+    crc = crc16(reduce(concat_str, token_order))
     token_order.append(crc)
     token64_order = token_order[1:]
-    return reduce(concat, token64_order)
+    return reduce(concat_str, token64_order)
