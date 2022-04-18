@@ -116,5 +116,4 @@ def class_insert(bits64_string):
     key = [bit28, bit27] + key
 
     concatenated_key = reduce(concat_str, key)
-    print('len-ci', len(concatenated_key))
     return concatenated_key
