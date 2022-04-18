@@ -1,86 +1,124 @@
+from datetime import timedelta
 from functools import reduce
+from Crypto.Cipher import DES
+
 from keygen import generate_decoder_key
-from tokengen import bin_pad, bin_str, concat_str, generate_token_block, token_class
+from tokencipher_sts import class_insert, nibbleate, token_nibbleate
+from tokengen import bin_pad, bin_str, concat_str, crc16, generate_token_block, base_date, token_class
 
 
-def start_point(decoder_key, token_block):
-    start_point_int = int(decoder_key, base=2) ^ int(token_block, base=2)
-    start_point_bin_str = bin_pad(bin_str(start_point_int), 64)
-    return start_point_bin_str
+def post_encryption(encrypted):
+    bits64_encrypted = bin_pad(bin_str(int(encrypted.hex(), base=16)), 64)
+    # print(bits64_encrypted)
+    # print(len(bits64_encrypted))
+    class_inserted_encrypted = class_insert(bits64_encrypted)
+    print('ci', hex(int(class_inserted_encrypted, base=2)).lstrip('0x'))
+    nibblated, unnibblated= token_nibbleate(class_inserted_encrypted)
+    # print(nibblated, unnibblated)
+    return nibblated, unnibblated
+
+token_block = generate_token_block()
+decoder_key = generate_decoder_key()
+iv = b'\x17\xb2\x86\xed1\x9a\x15\xf2'
+
+def encrypt(token_block, decoder_key):
+    # print(len(token_block))
+    # print(len(decoder_key))
+    token_block_int = int(token_block, base=2)
+    # print(token_block_int)
+    decoder_key_int = int(decoder_key, base=2)
+    # print(decoder_key_int)
+
+    token_block_hex_padded = bin_pad(hex(token_block_int).lstrip('0x'), 16)
+    print('tk', token_block_hex_padded)
+    decoder_key_hex_padded = bin_pad(hex(decoder_key_int).lstrip('0x'), 16)
+    # print(decoder_key_hex_padded)
+
+    byte_arrayed_token_block = bytearray.fromhex(token_block_hex_padded)
+    print('by-tk', byte_arrayed_token_block)
+    byte_arrayed_decoder_key = bytearray.fromhex(decoder_key_hex_padded)
+
+    print('dek', byte_arrayed_decoder_key)
+
+    cipher = DES.new(byte_arrayed_decoder_key, DES.MODE_OFB, iv=iv)
+    # global iv
+    # iv = cipher.iv
+    print('iv', cipher.iv.hex())
+    encrypted = cipher.encrypt(byte_arrayed_token_block)
+    print('en', encrypted.hex())
+    nibbleated_token, unnibblated_token = post_encryption(encrypted)
+    print('nibblated', nibbleated_token)
+
+    return unnibblated_token
+
+encrypted_token = encrypt(token_block, decoder_key)
 
 
-start_point = start_point(generate_decoder_key(), generate_token_block())
+def pre_decryption(bits66_string):
+    exploded_token_bits = [i for i in bits66_string]
+    i_28_27 = exploded_token_bits[0:2]
+    exploded_token_bits[-29] = i_28_27[0]
+    exploded_token_bits[-28] = i_28_27[1]
+    exploded_token_bits.pop(0)
+    exploded_token_bits.pop(0)
+
+    # print(len(exploded_token_bits))
+    concatenated_key = reduce(concat_str, exploded_token_bits)
+    # print(concatenated_key)
+    return concatenated_key
 
 
-def nibbleate(bits64_string):
-    nibbles = []
-    for i in range(0, len(bits64_string), 4):
-        nibbles.append(bits64_string[i: i + 4])
-    return nibbles
+def decrypt(encrypted_token):
+    token_bits66 = bin_pad(bin_str(int(encrypted_token)), 66)
+    class_removed = pre_decryption(token_bits66)
+    class_removed_int = int(class_removed, base=2)
+    class_removed_hex_padded = bin_pad(hex(class_removed_int).lstrip('0x'), 16)
+    print('cr', class_removed_hex_padded)
+    byte_arrayed_token = bytearray.fromhex(class_removed_hex_padded)
 
-def token_nibbleate(bits64_string):
-    decimal_token = int(bits64_string, base=2)
-    decimal_token_str = str(decimal_token)
-    padded_decimal_token = bin_pad(decimal_token_str, 20)
-    nibbleated_decimal_token = nibbleate(padded_decimal_token)
+    decoder_key_int = int(decoder_key, base=2)
+    decoder_key_hex_padded = bin_pad(hex(decoder_key_int).lstrip('0x'), 16)
+    byte_arrayed_decoder_key = bytearray.fromhex(decoder_key_hex_padded)
+    print('dek', byte_arrayed_decoder_key)
+    print('iv', iv.hex())
 
-    concatenated_decimal_nibbles = reduce(lambda x, y: concat_str(x, y, '-'), nibbleated_decimal_token)
-    return concatenated_decimal_nibbles
+    cipher = DES.new(byte_arrayed_decoder_key, DES.MODE_OFB, iv=iv)
+    decrypted = cipher.decrypt(byte_arrayed_token)
 
+    print('de', decrypted.hex())
+    print('by-de', decrypted)
 
+    token_block_bin = bin_pad(bin_str(int(decrypted.hex(), base=16)), 64)
+    print(token_block_bin)
+    print(len(token_block_bin))
 
-def substitute(bits64_string):
-    tables = {
-        1: [4, 6, 0, 9, 2, 8, 7, 5, 14, 12, 3, 15, 13, 10, 11, 1],
-        2: [2, 15, 4, 10, 0, 7, 1, 6, 5, 3, 13, 14, 9, 12, 8, 11]
+    return token_block_bin
+
+decrypted_token = decrypt(encrypted_token)
+
+def extract_token_info(decrypted_token):
+    subclass = decrypted_token[0 : 4]
+    rnd_bits = decrypted_token[4 : 8]
+
+    tk_id = decrypted_token[8 : 32]
+    tk_id_formatted = base_date + timedelta(minutes=int(decrypted_token[8 : 32], base=2))
+
+    amount = decrypted_token[32 : 48]
+    amount_formatted = int(decrypted_token[32 : 48], base=2)
+    
+    token_order = [token_class, subclass, rnd_bits, tk_id, amount]
+    crc_data = reduce(concat_str, token_order)
+    crc = {'received': decrypted_token[48 :], 'calculated': crc16(reduce(concat_str, token_order))}
+
+    token_info = {
+        'class': token_class,
+        'subclass': subclass,
+        'rnd': rnd_bits,
+        'tkid': tk_id_formatted,
+        'amount': amount_formatted,
+        'crc': crc
     }
+    print(token_info)
+    return token_info
 
-    nibbles = nibbleate(bits64_string)
-    enumerated_nibbles = list(zip(range(len(nibbles)), nibbles))
-
-    for i, nibble in enumerated_nibbles:
-        if nibble[0] == '0':
-            table = tables[1]
-            nibbles[i] = table[i]
-        else:
-            table = tables[2]
-            nibbles[i] = table[i]
-
-    substituted_nibbles = list(map(lambda x: bin_pad(bin_str(x), 4), nibbles))
-    concatenated_substituted_nibbles = reduce(concat_str, substituted_nibbles)
-    return concatenated_substituted_nibbles
-
-def permutate(bits64_string):
-    table = [57, 9, 61, 53, 2, 14, 4, 38, 52, 29, 28, 45, 15, 11, 20, 3, 35, 17, 50, 40, 59, 16, 43, 47, 25, 18, 62, 37, 33, 24, 55, 22, 30, 63, 23, 0, 19, 26, 32, 7, 31, 36, 13, 46, 44, 48, 56, 39, 8, 60, 27, 49, 10, 42, 6, 5, 1, 12, 58, 54, 41, 34, 21, 51]
-    initial_permutation = [i for i in bits64_string]
-    final_permutation = list(range(64))
-
-    for i in list(range(64)):
-        final_permutation[table[i]] = initial_permutation[i]
-
-    concatenated_permutated_bits = reduce(concat_str, final_permutation)
-    return concatenated_permutated_bits
-
-def rotate(bits64_string):
-    key = [i for i in bits64_string]
-    msb = key.pop(0)
-    key.append(msb)
-
-    concatenated_key = reduce(concat_str, key)
-    return concatenated_key
-
-def class_insert(bits64_string):
-    exploded_token_class = [i for i in token_class]
-    key = [i for i in bits64_string]
-    bit28 = key[-29]
-    bit27 = key[-28]
-    key[-29] = exploded_token_class[0]
-    key[-28] = exploded_token_class[1]
-    key[0] = bit28
-    key[1] = bit27
-
-    concatenated_key = reduce(concat_str, key)
-    return concatenated_key
-
-
-# def generate_encrypted_token():
+extract_token_info(decrypted_token)

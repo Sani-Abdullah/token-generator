@@ -5,6 +5,7 @@ import numpy as np
 from datetime import datetime
 
 
+base_date = datetime(2022, 4, 17)
 rate = 3/200
 amount_cash = 2000
 utility_amount = rate * amount_cash
@@ -86,7 +87,6 @@ def get_random(): # TBD 4 DP
     return bin_pad(bin_str(rnd), 4)
 
 def get_token_id():
-    base_date = datetime(2022, 4, 17)
     now = datetime.now()
     delta = now - base_date
     minutes_from_base_date = int(delta.total_seconds() / 60)
