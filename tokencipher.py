@@ -32,15 +32,19 @@ def encrypt(token_block, decoder_key):
     # global iv
     # iv = cipher.iv
     encrypted = cipher.encrypt(byte_arrayed_token_block)
-    nibbleated_token, unnibblated_token = post_encryption(encrypted)
+    _, unnibblated_token = post_encryption(encrypted)
 
     return unnibblated_token
 
-encrypted_token = encrypt(token_block, decoder_key)
+encrypted_token_20digits = encrypt(token_block, decoder_key)
 
+#################
+# METER OPS BELOW
+#################
 
-def pre_decryption(bits66_string):
-    exploded_token_bits = [i for i in bits66_string]
+def pre_decryption(token_20digits):
+    token_bits66 = bin_pad(bin_str(int(token_20digits)), 66)
+    exploded_token_bits = [i for i in token_bits66]
     i_28_27 = exploded_token_bits[0:2]
     exploded_token_bits[-29] = i_28_27[0]
     exploded_token_bits[-28] = i_28_27[1]
@@ -51,9 +55,8 @@ def pre_decryption(bits66_string):
     return concatenated_key
 
 
-def decrypt(encrypted_token):
-    token_bits66 = bin_pad(bin_str(int(encrypted_token)), 66)
-    class_removed = pre_decryption(token_bits66)
+def decrypt(token_20digits):
+    class_removed = pre_decryption(token_20digits)
     class_removed_int = int(class_removed, base=2)
     class_removed_hex_padded = bin_pad(hex(class_removed_int).lstrip('0x'), 16)
     byte_arrayed_token = bytearray.fromhex(class_removed_hex_padded)
@@ -70,7 +73,7 @@ def decrypt(encrypted_token):
 
     return token_block_bin
 
-decrypted_token = decrypt(encrypted_token)
+decrypted_token = decrypt(encrypted_token_20digits)
 
 def extract_token_info(decrypted_token):
     subclass = decrypted_token[0 : 4]
@@ -84,7 +87,7 @@ def extract_token_info(decrypted_token):
     
     token_order = [token_class, subclass, rnd_bits, tk_id, amount]
     crc_data = reduce(concat_str, token_order)
-    crc = {'received': decrypted_token[48 :], 'calculated': crc16(reduce(concat_str, token_order))}
+    crc = {'received': decrypted_token[48 :], 'calculated': crc16(crc_data)}
 
     token_info = {
         'class': token_class,
