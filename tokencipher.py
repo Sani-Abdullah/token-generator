@@ -32,11 +32,13 @@ def encrypt(token_block, decoder_key):
     # global iv
     # iv = cipher.iv
     encrypted = cipher.encrypt(byte_arrayed_token_block)
-    _, unnibblated_token = post_encryption(encrypted)
+    nibblated, unnibblated_token = post_encryption(encrypted)
+    print(nibblated)
 
     return unnibblated_token
 
 encrypted_token_20digits = encrypt(token_block, decoder_key)
+print(encrypted_token_20digits)
 
 #################
 # METER OPS BELOW
@@ -97,6 +99,7 @@ def extract_token_info(decrypted_token):
         'amount': amount_formatted,
         'crc': crc
     }
+    print(token_info)
     return token_info
 
-extract_token_info(decrypted_token)
+token_info = extract_token_info(decrypted_token)

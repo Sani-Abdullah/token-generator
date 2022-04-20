@@ -59,4 +59,8 @@ def generate_decoder_key():
     # DKGA02 END
     ##################
 
+    # print(decoder_key)
+
     return decoder_key
+
+# generate_decoder_key()

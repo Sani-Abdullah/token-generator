@@ -7,7 +7,7 @@ from datetime import datetime
 
 base_date = datetime(2022, 4, 17)
 rate = 3/200
-amount_cash = 2000
+amount_cash = 200
 utility_amount = rate * amount_cash
 complimented_amount = int(utility_amount * 10)
 
@@ -105,4 +105,7 @@ def generate_token_block():
     crc = crc16(reduce(concat_str, token_order))
     token_order.append(crc)
     token64_order = token_order[1:]
+    print(token64_order)
     return reduce(concat_str, token64_order)
+
+# generate_token_block()
