@@ -3,8 +3,8 @@ from Crypto.Random import get_random_bytes
 
 
 def generate_vending_key():
-    vending_key = get_random_bytes(8)
-    # vending_key = b'\xee\x11Z{\t\x96\x0e\x11'
+    # vending_key = get_random_bytes(8)
+    vending_key = b'\xee\x11Z{\t\x96\x0e\x11'
     return vending_key
 
 
@@ -60,6 +60,9 @@ def generate_decoder_key():
     ##################
 
     # print(decoder_key)
+
+    # interfacing
+    decoder_key = '0001001100110100010101110111100110011011101111001101111111110001'
 
     return decoder_key
 

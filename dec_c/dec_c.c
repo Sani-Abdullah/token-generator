@@ -232,10 +232,10 @@ int ToBits(int value)
         m = 1 << j;
         k = value & m;
         if (k == 0) {
-            X2[3 - j + i] = '0' – 48;
+            X2[3 - j + i] = '0' - 48;
         }
         else {
-            X2[3 - j + i] = '1' – 48;
+            X2[3 - j + i] = '1' - 48;
         }
     }
  
@@ -275,7 +275,7 @@ int PBox(int pos, int text)
 void cipher(int Round, int mode)
 {
     for (int i = 0; i < 32; i++) {
-        expansion_function(i, RIGHT[Round – 1][i]);
+        expansion_function(i, RIGHT[Round - 1][i]);
     }
  
     for (int i = 0; i < 48; i++)
@@ -284,7 +284,7 @@ void cipher(int Round, int mode)
             XORtext[i] = XOR(EXPtext[i], key48bit[Round][i]);
         }
         else {
-            XORtext[i] = XOR(EXPtext[i], key48bit[17 – Round][i]);
+            XORtext[i] = XOR(EXPtext[i], key48bit[17 - Round][i]);
         }
     }
  
@@ -295,7 +295,7 @@ void cipher(int Round, int mode)
     }
  
     for (int i = 0; i < 32; i++) {
-        RIGHT[Round][i] = XOR(LEFT[Round – 1][i], R[i]);
+        RIGHT[Round][i] = XOR(LEFT[Round - 1][i], R[i]);
     }
 }
  
@@ -360,7 +360,7 @@ void Encryption(long int plain[])
     }
  
     for (int i = 32; i < 64; i++) {
-        RIGHT[0][i – 32] = IPtext[i];
+        RIGHT[0][i - 32] = IPtext[i];
     }
  
     for (int k = 1; k < 17; k++)
@@ -368,7 +368,7 @@ void Encryption(long int plain[])
         cipher(k, 0);
  
         for (int i = 0; i < 32; i++)
-            LEFT[k][i] = RIGHT[k – 1][i];
+            LEFT[k][i] = RIGHT[k - 1][i];
     }
  
     for (int i = 0; i < 64; i++)
@@ -377,7 +377,7 @@ void Encryption(long int plain[])
             CIPHER[i] = RIGHT[16][i];
         }
         else {
-            CIPHER[i] = LEFT[16][i – 32];
+            CIPHER[i] = LEFT[16][i - 32];
         }
         finalPermutation(i, CIPHER[i]);
     }
@@ -400,7 +400,7 @@ void Decryption(long int plain[])
     }
  
     for (int i = 32; i < 64; i++) {
-        RIGHT[0][i – 32] = IPtext[i];
+        RIGHT[0][i - 32] = IPtext[i];
     }
  
     for (int k = 1; k < 17; k++)
@@ -408,7 +408,7 @@ void Decryption(long int plain[])
         cipher(k, 1);
  
         for (int i = 0; i < 32; i++) {
-            LEFT[k][i] = RIGHT[k – 1][i];
+            LEFT[k][i] = RIGHT[k - 1][i];
         }
     }
  
@@ -417,7 +417,7 @@ void Decryption(long int plain[])
         if (i < 32) {
             CIPHER[i] = RIGHT[16][i];
         } else {
-            CIPHER[i] = LEFT[16][i – 32];
+            CIPHER[i] = LEFT[16][i - 32];
         }
         finalPermutation(i, CIPHER[i]);
     }
@@ -433,7 +433,7 @@ void convertToBits(int ch[])
 {
     int value = 0;
     for (int i = 7; i >= 0; i--) {
-        value += (int)pow(2, i) * ch[7 – i];
+        value += (int)pow(2, i) * ch[7 - i];
     }
     fprintf(out, "%c", value);
 }
@@ -487,38 +487,38 @@ void key64to48(unsigned int key[])
             C[0][i] = key56bit[i];
         }
         else {
-            D[0][i – 28] = key56bit[i];
+            D[0][i - 28] = key56bit[i];
         }
     }
  
     for (int x = 1; x < 17; x++)
     {
-        int shift = SHIFTS[x – 1];
+        int shift = SHIFTS[x - 1];
  
         for (int i = 0; i < shift; i++) {
-            backup[x - 1][i] = C[x – 1][i];
+            backup[x - 1][i] = C[x - 1][i];
         }
  
-        for (int i = 0; i < (28 – shift); i++) {
-            C[x][i] = C[x – 1][i + shift];
+        for (int i = 0; i < (28 - shift); i++) {
+            C[x][i] = C[x - 1][i + shift];
         }
  
         k = 0;
-        for (int i = 28 – shift; i < 28; i++) {
-            C[x][i] = backup[x – 1][k++];
+        for (int i = 28 - shift; i < 28; i++) {
+            C[x][i] = backup[x - 1][k++];
         }
  
         for (int i = 0; i < shift; i++) {
-            backup[x - 1][i] = D[x – 1][i];
+            backup[x - 1][i] = D[x - 1][i];
         }
  
-        for (int i = 0; i < (28 – shift); i++) {
-            D[x][i] = D[x – 1][i + shift];
+        for (int i = 0; i < (28 - shift); i++) {
+            D[x][i] = D[x - 1][i + shift];
         }
  
         k = 0;
-        for (int i = 28 – shift; i < 28; i++) {
-            D[x][i] = backup[x – 1][k++];
+        for (int i = 28 - shift; i < 28; i++) {
+            D[x][i] = backup[x - 1][k++];
         }
     }
  
@@ -529,7 +529,7 @@ void key64to48(unsigned int key[])
         }
  
         for (int i = 28; i < 56; i++) {
-            CD[j][i] = D[j][i – 28];
+            CD[j][i] = D[j][i - 28];
         }
     }
  
@@ -551,7 +551,7 @@ void decrypt(long int n)
     while (!feof(in))
     {
         ch = getc(in);
-        plain[++i] = ch – 48;
+        plain[++i] = ch - 48;
     }
  
     for (int i = 0; i < n; i++)
@@ -574,7 +574,7 @@ void encrypt(long int n)
     while (!feof(in))
     {
         ch = getc(in);
-        plain[++i] = ch – 48;
+        plain[++i] = ch - 48;
     }
  
     for (int i = 0; i < n; i++) {
@@ -593,7 +593,7 @@ void create16Keys()
     while (!feof(pt))
     {
         ch = getc(pt);
-        key[i++] = ch – 48;
+        key[i++] = ch - 48;
     }
  
     key64to48(key);
