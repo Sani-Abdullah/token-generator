@@ -100,7 +100,16 @@ def get_amount_block():
     return amount_block
 
 
-def generate_token_block():
+def generate_token_block(rate: float, amount: int, token_class: int, token_subclass: int):
+    token_class = bin_pad(bin_str(token_class), 2) #[0-3]
+    token_subclass = bin_pad(bin_str(token_subclass), 4) #[0-15]
+    amount_cash = amount
+    utility_amount = rate * amount_cash
+    complimented_amount = int(utility_amount * 10)
+    exponent = get_exponent(complimented_amount)
+    dressed_exponent = bin_pad(bin_str(exponent), 2)
+
+
     token_order = [token_class, token_subclass, get_random(), get_token_id(), dressed_exponent, get_mantissa(exponent, complimented_amount)]
     crc = crc16(reduce(concat_str, token_order))
     token_order.append(crc)
@@ -117,4 +126,4 @@ def generate_token_block():
 
     return reduced_token64_order
 
-generate_token_block()
+# generate_token_block()

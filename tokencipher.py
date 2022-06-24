@@ -14,8 +14,8 @@ def post_encryption(encrypted):
     return nibblated, unnibblated
 
 
-token_block = generate_token_block()
-decoder_key = generate_decoder_key()
+# token_block = generate_token_block()
+# decoder_key = generate_decoder_key()
 iv = b'\x17\xb2\x86\xed1\x9a\x15\xf2'
 
 
@@ -113,17 +113,36 @@ def extract_token_info(decrypted_token):
 # token_info = extract_token_info(decrypted_token)
 
 
-nibblated = encrypt(token_block, decoder_key)
+# nibblated = encrypt(token_block, decoder_key)
 
 # 'priceGross': ,
-# 'priceNet': , 
-# 'debt': , 
+# 'priceNet': ,
+# 'debt': ,
 # 'vat': ,
-token_gen_response = f"""{{
-    'token': {nibblated},
-    'rate': {rate}
-}}"""
-print(
-token_gen_response
-)
+# token_gen_response = f"""{{
+#     'token': {nibblated},
+#     'rate': {rate}
+# }}"""
+# print(
+# token_gen_response
+# )
+
+
 # print(str(nibblated))
+
+
+if __name__ == "__main__":
+    import sys
+
+    rate = sys.argv[1]
+    amount = sys.argv[2]
+    meter_number = sys.argv[3]
+    token_class = sys.argv[4] # [0-3]
+    token_subclass = sys.argv[5] # [0-15]
+
+    token_block = generate_token_block(float(rate), int(amount), int(token_class), int(token_subclass))
+    decoder_key = generate_decoder_key(int(meter_number))
+
+    nibblated = encrypt(token_block, decoder_key)
+
+    print(nibblated)

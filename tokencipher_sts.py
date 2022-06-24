@@ -46,7 +46,7 @@ def start_point(decoder_key, token_block):
     return start_point_bin_str
 
 
-start_point = start_point(generate_decoder_key(), generate_token_block())
+# start_point = start_point(generate_decoder_key(), generate_token_block())
 
 
 def nibbleate(bits64_string):

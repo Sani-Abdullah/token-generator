@@ -8,7 +8,7 @@ def generate_vending_key():
     return vending_key
 
 
-def generate_decoder_key():
+def generate_decoder_key(meter_number = 35666666666):
 
     # control block params
     key_type = 2  # [0-3]
@@ -20,7 +20,7 @@ def generate_decoder_key():
 
     # pan block params
     issuer_id_no = 600727  # sts specified
-    decoder_reg_no = 35666666666  # random meter number
+    decoder_reg_no = meter_number  # random meter number
     stringed_pan_params = list(map(lambda x: str(x), [issuer_id_no, decoder_reg_no]))
 
     # blocks
