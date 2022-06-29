@@ -144,5 +144,6 @@ if __name__ == "__main__":
     decoder_key = generate_decoder_key(int(meter_number))
 
     nibblated = encrypt(token_block, decoder_key)
+    #
 
     print(nibblated)
